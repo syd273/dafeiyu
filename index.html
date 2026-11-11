@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>大肥鱼部署 · 在自己电脑上跑一个会生活、有记忆的 AI 伴侣</title>
+<meta name="description" content="大肥鱼部署教程：可本地部署的 AI 生活伴侣，鸿蒙(HarmonyOS/ArkTS)客户端 + Python 网关 + Node 生活引擎，一键部署在自己电脑上，聊天走自己的 DeepSeek API Key，数据全部本地。">
+<meta name="keywords" content="大肥鱼,大肥鱼部署,本地部署AI,AI伴侣,鸿蒙应用,ArkTS,DeepSeek,自建聊天机器人,记忆星图,开源">
+<meta property="og:title" content="大肥鱼 · 可本地部署的 AI 生活伴侣">
+<meta property="og:description" content="她会生活、有记忆、能可视化记忆星图。全部跑在你自己的电脑上。">
+<meta property="og:image" content="assets/chat.jpg">
+<style>
+  :root { --bg:#0d1017; --card:#161b29; --line:#232d47; --ink:#eef2ff; --dim:#8b98b8; --blue:#3b6ef5; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--ink); font: 16px/1.75 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 56px 24px 80px; }
+  .hero h1 { font-size: 38px; line-height: 1.3; letter-spacing: .5px; }
+  .hero .sub { color: var(--dim); margin-top: 14px; font-size: 17px; }
+  .badges { margin-top: 22px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .badge { font-size: 12.5px; color: #9fb4e6; border: 1px solid var(--line); background: #121826; padding: 5px 12px; border-radius: 20px; }
+  .cta { margin-top: 30px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn { display: inline-block; padding: 12px 22px; border-radius: 10px; text-decoration: none; font-size: 15px; font-weight: 600; }
+  .btn.primary { background: var(--blue); color: #fff; }
+  .btn.ghost { border: 1px solid var(--line); color: var(--ink); background: #121826; }
+  section { margin-top: 62px; }
+  h2 { font-size: 23px; margin-bottom: 18px; padding-left: 13px; border-left: 3px solid var(--blue); }
+  h3 { font-size: 16px; margin: 22px 0 8px; color: #cfe0ff; }
+  p { color: #c3cbdd; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); gap: 16px; margin-top: 8px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+  .card h4 { font-size: 15.5px; margin-bottom: 8px; color: #fff; }
+  .card p { font-size: 14px; color: var(--dim); }
+  .shots { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 10px; }
+  .shots img { width: 240px; border-radius: 12px; border: 1px solid var(--line); }
+  pre { background: #121826; border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; overflow-x: auto; margin: 10px 0 0; }
+  code { font-family: "Cascadia Code",Consolas,monospace; font-size: 13.5px; color: #9fd6ff; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14.5px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  th { color: #9fb4e6; font-weight: 600; }
+  td { color: #c3cbdd; }
+  a { color: #7aa2ff; }
+  footer { margin-top: 70px; padding-top: 24px; border-top: 1px solid var(--line); color: #6b7a99; font-size: 13.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <h1>大肥鱼 · 住在你电脑里的 AI 生活伴侣</h1>
+    <p class="sub">她有自己的生活节奏，会记事，会主动找你，还能在记忆星图里看见她记住的每一件事。<br>全部跑在你自己的机器上，数据不出门。</p>
+    <div class="badges">
+      <span class="badge">HarmonyOS / ArkTS</span>
+      <span class="badge">Python + Node</span>
+      <span class="badge">DeepSeek</span>
+      <span class="badge">MIT</span>
+      <span class="badge">v1.0.0</span>
+    </div>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/syd273/dafeiyu">查看源码</a>
+      <a class="btn ghost" href="#deploy">部署教程</a>
+      <a class="btn ghost" href="http://121.196.175.68/repo/">国内镜像</a>
+    </div>
+  </div>
+
+  <section>
+    <h2>她能做什么</h2>
+    <div class="grid">
+      <div class="card"><h4>她会生活</h4><p>独立的作息表：早餐、写东西、做饭、阳台看外面。每天自主产生生活事件，不重样。</p></div>
+      <div class="card"><h4>她会主动找你</h4><p>早安、晚安、关心、分享、想念、吃醋。会刷 B站/抖音，看到有意思的内容发给你。</p></div>
+      <div class="card"><h4>她会记住</h4><p>每句对话都进记忆库，带情绪与权重，有遗忘曲线。夜间自动巩固、写日记。</p></div>
+      <div class="card"><h4>记忆星图</h4><p>横屏 3D 银河，每颗星是一条记忆。点星星看当时说了什么，可搜索定位。</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>界面</h2>
+    <div class="shots">
+      <img src="assets/chat.jpg" alt="大肥鱼 聊天界面：微信风格气泡、称呼、在线状态">
+      <img src="assets/settings.jpg" alt="大肥鱼 设置页：本地服务器、云端服务器、API Key 配置">
+      <img src="assets/says.jpg" alt="大肥鱼 她的说说：自主生成的生活动态">
+    </div>
+  </section>
+
+  <section id="deploy">
+    <h2>部署（约 10 分钟）</h2>
+    <h3>1. 拉代码</h3>
+    <pre><code>git clone https://github.com/syd273/dafeiyu.git
+cd dafeiyu</code></pre>
+    <h3>2. 初始化 + 填 Key</h3>
+    <pre><code>powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
+# 然后在根目录新建 deepseek-key.txt，写入你的 sk-...</code></pre>
+    <h3>3. 启动全部服务</h3>
+    <pre><code>powershell -ExecutionPolicy Bypass -File scripts\start_all.ps1</code></pre>
+    <h3>4. 手机连上</h3>
+    <p>电脑 <code>ipconfig</code> 查局域网 IP，App 里「设置 → 本地服务器」填 <code>http://192.168.x.x:8900</code>，测试连接 → 保存。手机和电脑需同一 WiFi。</p>
+
+    <table>
+      <tr><th>服务</th><th>端口</th><th>作用</th></tr>
+      <tr><td>Python 网关</td><td>8900</td><td>聊天、状态、记忆、通知接口</td></tr>
+      <tr><td>Node 生活引擎</td><td>8910</td><td>作息、情绪、主动消息、夜间巩固</td></tr>
+      <tr><td>记忆星图</td><td>8899</td><td>3D 星图 Web 页面</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>技术说明</h2>
+    <p>鸿蒙客户端用 ArkTS/ArkUI 编写，服务端是 FastAPI 网关加零依赖的 Node 生活引擎；记忆星图是 Three.js 渲染的 WebGL 页面，在 App 里以横屏 WebView 承载。聊天推理调用 DeepSeek API，Key 由使用者自己填。</p>
+    <p style="margin-top:12px">安卓端尚未实现，移植路线（WebView 壳 / Kotlin 重写 / 跨端框架）与接口清单见仓库 <code>docs/android.md</code>。</p>
+  </section>
+
+  <footer>
+    大肥鱼（DaFeiyu）· MIT License ·
+    <a href="https://github.com/syd273/dafeiyu">GitHub</a> ·
+    <a href="http://121.196.175.68/repo/">源码镜像</a><br>
+    鸿蒙端在应用市场的上架名称为「安诗鱼」，是同一个项目；「安诗鱼」也是她的默认名字，可在设置里改。
+  </footer>
+
+</div>
+</body>
+</html>
