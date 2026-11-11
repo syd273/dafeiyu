@@ -3,6 +3,8 @@
 export struct ChatInput {
   @Link sending: boolean;
   @Prop @Watch('onDraftChanged') draft: string = '';
+  // 底部导航条高度（EntryAbility 写入），输入栏必须避让，否则被手势条压住
+  @StorageProp('navBarHeight') navH: number = 28;
   @State text: string = '';
   onSend: (t: string) => void = () => { };
   onToggleEmoji: () => void = () => { };
@@ -58,7 +60,7 @@ export struct ChatInput {
         .onClick(() => { this.send(); })
     }
     .width('100%')
-    .padding({ left: 12, right: 12, top: 8, bottom: 12 })
+    .padding({ left: 12, right: 12, top: 8, bottom: 12 + this.navH })
     .backgroundColor('#11151f')
     .alignItems(VerticalAlign.Bottom)
   }

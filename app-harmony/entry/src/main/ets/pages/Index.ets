@@ -70,17 +70,18 @@ struct Index {
     // 首帧优先：先渲染界面，所有网络请求延迟，避免冷启动被网络拖慢
     setTimeout(() => {
       this.loadHistory();
-    }, 120);
+    }, 0);
     setTimeout(() => {
       this.loadConfig().then(() => {
         this.loadStatus();
         this.connectWs();
         this.finishSplash();
-        setTimeout(() => { this.syncRecent(); }, 400);
-        setTimeout(() => { PushHelper.register(this.baseUrl); }, 3000);
+        setTimeout(() => { this.syncRecent(); }, 800);
+        // Push 上报放到最后，别抢启动带宽
+        setTimeout(() => { PushHelper.register(this.baseUrl); }, 6000);
       }).catch(() => { this.finishSplash(); });
-    }, 700);
-    setTimeout(() => { this.finishSplash(); }, 450);
+    }, 60);
+    setTimeout(() => { this.finishSplash(); }, 260);
   }
 
   onPageShow() {
@@ -107,7 +108,7 @@ struct Index {
       const since = await SyncState.get(ctx);
       const req = http.createHttp();
       const res = await req.request(`${this.baseUrl}/api/messages/recent?token=${TOKEN}&since=${since}`, {
-        method: http.RequestMethod.GET, connectTimeout: 8000, readTimeout: 10000,
+        method: http.RequestMethod.GET, connectTimeout: 2000, readTimeout: 3000,
       });
       req.destroy();
       if (res.responseCode === 200) {
@@ -145,7 +146,7 @@ struct Index {
 
   finishSplash() {
     if (!this.showSplash) return;
-    const wait = Math.max(0, 800 - (Date.now() - this.splashStart));
+    const wait = Math.max(0, 350 - (Date.now() - this.splashStart));
     setTimeout(() => {
       this.getUIContext().animateTo({ duration: 300, curve: Curve.EaseInOut }, () => {
         this.splashOpacity = 0;
@@ -203,7 +204,7 @@ struct Index {
       const m = this.baseUrl.match(/^(https?:\/\/)(\d+\.\d+\.\d+)\./);
       if (!m) return false;
       const prefix = `${m[1]}${m[2]}.`;
-      const candidates = [5, 2, 6, 10, 20, 3, 4, 7, 8, 9, 11, 12, 15, 30, 50];
+      const candidates = [5, 2, 6, 10, 20, 3, 4, 7];
       const tasks: Promise<string>[] = [];
       for (const n of candidates) {
         tasks.push(this.probe(`${prefix}${n}:8900`));
@@ -225,8 +226,8 @@ struct Index {
       const req = http.createHttp();
       const res = await req.request(`${base}/api/status?token=${TOKEN}`, {
         method: http.RequestMethod.GET,
-        connectTimeout: 1500,
-        readTimeout: 1500,
+        connectTimeout: 600,
+        readTimeout: 600,
       });
       req.destroy();
       if (res.responseCode === 200) return base;
@@ -239,8 +240,8 @@ struct Index {
       const req = http.createHttp();
       const res = await req.request(`${this.baseUrl}/api/status?token=${TOKEN}`, {
         method: http.RequestMethod.GET,
-        connectTimeout: 8000,
-        readTimeout: 8000,
+        connectTimeout: 1500,
+        readTimeout: 2000,
       });
       req.destroy();
       if (res.responseCode === 200) {
