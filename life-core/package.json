@@ -1,0 +1,10 @@
+{
+  "name": "anshiyu-life-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "安诗鱼 Life Core：独立运行的生活/记忆/情绪引擎（抽自 MIT 项目，见 NOTICE）",
+  "main": "src/server.mjs",
+  "engines": { "node": ">=22" },
+  "scripts": { "start": "node src/server.mjs", "check": "node --check src/server.mjs" }
+}

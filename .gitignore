@@ -1,0 +1,53 @@
+# 私密 / 个人数据
+deepseek-key.txt
+hk-server.txt
+safety.json
+memory/
+logs/
+downloads/
+life-core/data/
+milky-way-3d/life/
+milky-way-3d/memory_stars.json
+milky-way-3d/room/
+milky-way-3d/cozy-room/
+persona/stickers/
+persona/stickers.json
+persona/trends_cache.json
+milky-way-3d/srv.log
+milky-way-3d/srv.err
+persona/feed.json
+persona/life_state.json
+persona/proactive.json
+persona/share_config.json
+
+# 未包含的实验目录
+research/
+xray/
+subs/
+qq/
+AstrBot/
+plugins/
+starmap/
+
+# 构建产物
+app-harmony/**/build/
+app-harmony/.hvigor/
+app-harmony/oh_modules/
+**/node_modules/
+*.hap
+*.app
+*.log
+
+# 系统文件
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
+dist/
+backups/
+signing/
+anshiyu-server/config.json
+persona/.bili_cache.json
+persona/.douyin_cache.json
+persona/music_cache.json
+*.bak*

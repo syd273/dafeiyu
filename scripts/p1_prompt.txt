@@ -1,0 +1,13 @@
+用 Node.js 22 ESM 写一个零依赖的 HTTP 服务模块（src/http.mjs），要求：
+1. 导出 startHttpServer({ port, handlers }) 函数，返回 server 实例
+2. 路由：
+   GET  /health  -> { ok: true, service: "anshiyu-life-core", ts }
+   GET  /state   -> 调用 handlers.getState()
+   GET  /memories -> 调用 handlers.getMemories(limit)
+   POST /chat    -> 读取 JSON { text }，调用 handlers.chat(text)
+   POST /event   -> 读取 JSON，调用 handlers.event(payload)
+3. 统一 JSON 响应，带 CORS（允许所有来源），OPTIONS 处理
+4. 请求体限制 1MB，错误返回 { ok:false, error }
+5. 使用 node:http，不引入任何第三方包
+6. 代码带中文注释，风格简洁
+只输出代码，不要解释。

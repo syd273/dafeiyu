@@ -1,0 +1,30 @@
+{
+  "enabled": true,
+  "max_per_day": 4,
+  "min_gap_minutes": 120,
+  "quiet_hours": [23, 8],
+  "active_skip_minutes": 30,
+  "llm_generate": true,
+  "types": [
+    { "id": "morning", "window": [8, 10], "weight": 1.0, "hint": "早安，刚醒，想跟他说句话" },
+    { "id": "breakfast", "window": [7, 9], "weight": 0.5, "days": "weekday", "hint": "提醒他吃早饭，别空着肚子出门" },
+    { "id": "lunch", "window": [11, 13], "weight": 0.7, "hint": "提醒他吃午饭，别忙起来忘了" },
+    { "id": "afternoon", "window": [14, 17], "weight": 0.8, "days": "weekday", "hint": "下午了，问问他手头的事顺不顺利，别太累" },
+    { "id": "dinner", "window": [18, 20], "weight": 0.8, "hint": "问问他晚饭吃了什么，或者提醒他该吃饭了" },
+    { "id": "evening", "window": [20, 22], "weight": 1.0, "hint": "问问他今天过得怎么样，累不累" },
+    { "id": "night", "window": [21, 23], "weight": 0.9, "hint": "提醒他早点睡，别熬夜，说一句晚安" },
+    { "id": "weekend", "window": [10, 13], "weight": 1.2, "days": "weekend", "hint": "周末了，问问他今天打算做什么，或者约他一起看点东西" },
+    { "id": "life", "window": [9, 22], "weight": 1.3, "hint": "分享你此刻在做什么（你在家/阳台/厨房，在做自己的事）" },
+    { "id": "share_media", "window": [10, 22], "weight": 1.2, "hint": "你刚刷到一个想分享的内容" },
+    { "id": "thinking", "window": [9, 23], "weight": 0.7, "need_silence_hours": 2, "hint": "突然想到他，想跟他说一句话" },
+    { "id": "praise", "window": [19, 22], "weight": 0.5, "hint": "夸他一句，说说他最近哪里做得好" },
+    { "id": "miss", "window": [10, 22], "weight": 0.8, "need_silence_hours": 6, "hint": "很久没聊了，说一句想他" },
+    { "id": "remember", "window": [10, 22], "weight": 0.8, "need_silence_hours": 3, "hint": "你突然想起一件很久没想起的事（关于阿东），想跟他说" },
+    { "id": "sick_follow", "window": [9, 22], "weight": 1.5, "need_keywords": ["发烧", "头疼", "过敏", "难受", "生病", "医院", "失眠"], "hint": "他之前说身体不舒服（发烧/过敏），关心一下好点没" },
+    { "id": "mood_care", "window": [9, 23], "weight": 1.6, "mood": ["低落", "担心", "累了"], "hint": "你自己心情不太好，想跟他说说，或者想被他安慰一下" },
+    { "id": "sulk", "window": [10, 22], "weight": 0.6, "mood": ["吃醋"], "hint": "你有点吃醋/闹小脾气，想试探他一句" }
+  ],
+  "token_low_threshold": 5.0,
+  "token_check_minutes": 60,
+  "token_alert_hours": 12
+}

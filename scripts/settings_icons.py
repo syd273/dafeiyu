@@ -1,0 +1,15 @@
+from pathlib import Path
+p = Path(r"D:\anshiyu_app\entry\src\main\ets\pages\Settings.ets")
+s = p.read_text(encoding="utf-8")
+s = s.replace("Text('服务器地址')", "Text('🌐  服务器地址')")
+s = s.replace("Text('头像')", "Text('👤  头像与形象')")
+s = s.replace("Text('主题颜色')", "Text('🎨  主题颜色')")
+s = s.replace("Text('聊天背景')", "Text('🖼️  聊天背景')")
+s = s.replace("Text('自定义表情包')", "Text('😊  自定义表情包')")
+s = s.replace("""      Button('更换')
+        .height(32).margin({ left: 12 })""",
+"""      Text('›').fontSize(18).fontColor('#4a567c').margin({ left: 8 })
+      Button('更换')
+        .height(32).margin({ left: 8 })""")
+p.write_text(s, encoding="utf-8")
+print("settings icons added")

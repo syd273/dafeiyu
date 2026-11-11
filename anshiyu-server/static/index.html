@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>安诗鱼 · 测试聊天</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin:0; background:#0b0e18; color:#dfe6ff; font:15px/1.7 "Microsoft YaHei",sans-serif; }
+  header { padding:14px 18px; border-bottom:1px solid #1b2236; display:flex; gap:12px; align-items:center; }
+  header b { color:#9fc1ff; letter-spacing:2px; }
+  #status { color:#8fa2d8; font-size:12.5px; flex:1; }
+  #chat { padding:16px 18px 120px; max-width:820px; margin:0 auto; }
+  .m { margin:10px 0; display:flex; }
+  .m.user { justify-content:flex-end; }
+  .b { max-width:76%; padding:10px 14px; border-radius:14px; white-space:pre-wrap; }
+  .user .b { background:#2b3b66; color:#e8eeff; }
+  .ai .b { background:#141a2b; border:1px solid #222c47; color:#dbe4ff; }
+  .tools { position:fixed; left:0; right:0; bottom:0; padding:10px; background:#0d1120cc; backdrop-filter:blur(8px); border-top:1px solid #1b2236; }
+  .row { display:flex; gap:8px; max-width:820px; margin:0 auto 8px; }
+  input[type=text] { flex:1; background:#11162a; border:1px solid #26314f; color:#e8eeff; padding:11px 14px; border-radius:12px; outline:none; }
+  button { background:#2b3b66; color:#dfe6ff; border:1px solid #3a4c7a; padding:10px 14px; border-radius:12px; cursor:pointer; }
+  button:hover { background:#354a7d; }
+  button.ghost { background:#141a2b; }
+  #log { font-size:12px; color:#6f7fae; max-width:820px; margin:0 auto; }
+</style>
+</head>
+<body>
+<header>
+  <b>安诗鱼</b>
+  <div id="status">加载中…</div>
+  <button class="ghost" onclick="refreshStatus()">刷新状态</button>
+</header>
+<div id="chat"></div>
+<div class="tools">
+  <div class="row">
+    <button class="ghost" onclick="share('bili')">刷 B 站分享</button>
+    <button class="ghost" onclick="share('douyin')">刷抖音分享</button>
+    <button class="ghost" onclick="refreshStatus()">看她在干嘛</button>
+  </div>
+  <div class="row">
+    <input id="inp" type="text" placeholder="跟她说点什么…" onkeydown="if(event.key==='Enter')send()">
+    <button onclick="send()">发送</button>
+  </div>
+  <div id="log"></div>
+</div>
+<script>
+const TOKEN = "anshiyu-app-2026";
+function el(id){return document.getElementById(id)}
+function add(role, text){
+  const d = document.createElement('div');
+  d.className = 'm ' + (role === 'user' ? 'user' : 'ai');
+  const b = document.createElement('div'); b.className='b'; b.textContent = text;
+  d.appendChild(b); el('chat').appendChild(d);
+  window.scrollTo(0, document.body.scrollHeight);
+}
+async function refreshStatus(){
+  try {
+    const r = await fetch('/api/status?token=' + TOKEN);
+    const s = await r.json();
+    const life = s.life || {};
+    el('status').textContent = `心情 ${s.mood} · ${life.location||''} ${life.activity||''} · 记忆 ${s.messages} 条`;
+  } catch(e){ el('status').textContent = '状态读取失败'; }
+}
+async function loadHistory(){
+  try {
+    const r = await fetch('/api/history?token=' + TOKEN + '&limit=30');
+    const d = await r.json();
+    (d.items||[]).forEach(m => add(m.role, m.text));
+  } catch(e){}
+}
+async function send(){
+  const t = el('inp').value.trim(); if(!t) return;
+  el('inp').value=''; add('user', t);
+  el('log').textContent = '她在想…';
+  try {
+    const r = await fetch('/api/chat?token=' + TOKEN, {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({text:t})});
+    const d = await r.json();
+    if (d.reply) add('assistant', d.reply);
+    el('log').textContent = '心情：' + (d.mood||'') + ' · ' + ((d.life||{}).activity||'');
+    refreshStatus();
+  } catch(e){ el('log').textContent = '发送失败：' + e; }
+}
+async function share(kind){
+  el('log').textContent = '她正在刷…';
+  try {
+    const r = await fetch('/api/share/' + kind + '?token=' + TOKEN, {method:'POST'});
+    const d = await r.json();
+    if (d.text) add('assistant', d.text);
+    el('log').textContent = '分享：' + ((d.video||{}).title || (d.item||{}).title || '');
+  } catch(e){ el('log').textContent = '分享失败：' + e; }
+}
+loadHistory(); refreshStatus(); setInterval(refreshStatus, 20000);
+</script>
+</body>
+</html>

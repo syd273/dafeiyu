@@ -1,0 +1,17 @@
+用 Python 3.12 写一个零依赖（仅标准库 urllib）的 HTTP 客户端类 LifeCoreClient，用于访问本地 Life Core 服务（http://127.0.0.1:8910）。要求：
+1. __init__(base_url="http://127.0.0.1:8910", timeout=60)
+2. 方法：
+   - health() -> dict
+   - get_state() -> dict
+   - chat(text: str) -> dict
+   - event(kind: str, text: str, emo: str = "") -> dict
+   - recall(query: str) -> dict
+   - diary() -> dict
+   - facts(p: str = "", s: str = "", limit: int = 50) -> dict
+   - intents() -> dict
+   - intent_done(intent_id: str) -> dict
+   - consolidate() -> dict
+3. 用 urllib.request，JSON 编码 UTF-8，超时与异常统一转成 {"ok": False, "error": ...}
+4. URL 参数用 urllib.parse.urlencode
+5. 代码带中文注释
+只输出完整 Python 代码，不要解释，不要 markdown 围栏。

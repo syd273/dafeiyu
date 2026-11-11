@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>安诗鱼 · 上帝视角</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:#0b0e18; color:#dfe6ff; font:14px/1.7 "Microsoft YaHei",sans-serif; }
+  header { padding:14px 20px; border-bottom:1px solid #1b2236; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  header h1 { font-size:16px; letter-spacing:3px; color:#9fc1ff; margin:0; font-weight:600; }
+  #status { color:#8fa2d8; font-size:12.5px; flex:1; min-width:220px; }
+  button { background:#1c2740; color:#dfe6ff; border:1px solid #2e3f63; padding:7px 12px; border-radius:9px; cursor:pointer; font-size:12.5px; }
+  button:hover { background:#26344f; }
+  button.on { background:#2b3b66; border-color:#4a6396; color:#fff; }
+  main { max-width:1100px; margin:0 auto; padding:18px; display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .card { background:#101526; border:1px solid #1e2840; border-radius:14px; padding:14px 16px; }
+  .card h2 { font-size:13px; color:#7f95c8; letter-spacing:2px; margin:0 0 10px; font-weight:500; }
+  .big { font-size:20px; color:#eaf0ff; }
+  .sub { color:#8fa2d8; font-size:12.5px; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; }
+  .pill { background:#18203a; border:1px solid #26314f; border-radius:999px; padding:3px 10px; font-size:12px; color:#aebbe0; }
+  #timeline { display:flex; height:34px; border-radius:9px; overflow:hidden; margin:8px 0 4px; background:#0d1220; }
+  #timeline div { flex:1; border-right:1px solid #0b0e18; }
+  .item { padding:7px 0; border-bottom:1px dashed #1a2236; font-size:13px; }
+  .item:last-child { border-bottom:none; }
+  .ts { color:#5f6c96; font-size:11.5px; margin-right:8px; }
+  .emo { color:#9fc1ff; font-size:11.5px; margin-right:6px; }
+  .empty { color:#5f6c96; font-size:12.5px; }
+  .full { grid-column:1 / -1; }
+  .tag { display:inline-block; font-size:11px; padding:1px 7px; border-radius:999px; margin-right:6px; border:1px solid; }
+  .tag.talk { color:#8fa2d8; border-color:#33415f; }
+  .tag.share { color:#c39bff; border-color:#5b4a86; }
+  .tag.proactive { color:#ffc98a; border-color:#8a6a3d; }
+  .tag.diary { color:#9fe0b8; border-color:#3d7a58; }
+  .fbtn { padding:3px 9px; font-size:11.5px; border-radius:999px; }
+  @media (max-width:760px) { main { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>安诗鱼 · 上帝视角</h1>
+  <div id="status">加载中…</div>
+  <button id="btnFull">记忆完全</button>
+  <button id="btnDecay">记忆衰减</button>
+  <button id="btnRefresh">刷新</button>
+</header>
+
+<main>
+  <section class="card">
+    <h2>此刻</h2>
+    <div class="big" id="nowPlace">—</div>
+    <div class="sub" id="nowAct">—</div>
+    <div class="row" style="margin-top:10px">
+      <span class="pill" id="moodPill">心情 —</span>
+      <span class="pill" id="modePill">模式 —</span>
+      <span class="pill" id="countPill">情景 0</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>24 小时（当前时刻高亮）</h2>
+    <div id="timeline"></div>
+    <div class="sub" id="clock">—</div>
+  </section>
+
+  <section class="card full">
+    <h2>最近经历</h2>
+    <div id="recent"><div class="empty">暂无</div></div>
+  </section>
+
+  <section class="card">
+    <h2>未完成的意图</h2>
+    <div id="intents"><div class="empty">暂无</div></div>
+  </section>
+
+  <section class="card">
+    <h2>她记住的事实</h2>
+    <div id="facts"><div class="empty">暂无</div></div>
+  </section>
+
+  <section class="card full">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+      <h2 style="margin:0">她的动态</h2>
+      <span id="feedFilter">
+        <button class="fbtn on" data-f="all">全部</button>
+        <button class="fbtn" data-f="talk">说说</button>
+        <button class="fbtn" data-f="share">分享</button>
+        <button class="fbtn" data-f="proactive">主动</button>
+        <button class="fbtn" data-f="diary">日记</button>
+      </span>
+    </div>
+    <div id="feed"><div class="empty">暂无</div></div>
+  </section>
+</main>
+
+<script>
+const TOKEN = 'anshiyu-app-2026';
+const $ = (id) => document.getElementById(id);
+
+function fmt(ts) {
+  const ms = ts > 1e12 ? ts : ts * 1000; // feed 用秒，情景用毫秒
+  const d = new Date(ms);
+  const p = (n) => String(n).padStart(2, '0');
+  return `${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+let feedData = [];
+let feedFilter = 'all';
+const FEED_LABEL = { talk: '说说', share: '分享', proactive: '主动', diary: '日记' };
+
+function renderFeed() {
+  const box = $('feed');
+  if (!box) return;
+  const items = (feedData || []).filter((x) => feedFilter === 'all' || (x.kind || 'talk') === feedFilter);
+  box.innerHTML = items.length
+    ? items.slice(0, 8).map((x) => {
+        const kind = x.kind || 'talk';
+        return `<div class="item"><span class="ts">${fmt(x.ts)}</span>`
+          + `<span class="tag ${kind}">${FEED_LABEL[kind] || '说说'}</span>${x.text}</div>`;
+      }).join('')
+    : '<div class="empty">暂无</div>';
+}
+
+function renderTimeline() {
+  const box = $('timeline');
+  const h = new Date().getHours();
+  box.innerHTML = '';
+  for (let i = 0; i < 24; i++) {
+    const d = document.createElement('div');
+    d.style.background = i === h ? '#4a6db8' : (i >= 23 || i < 7 ? '#141a2c' : '#182238');
+    d.title = `${i}:00`;
+    box.appendChild(d);
+  }
+  $('clock').textContent = `现在 ${String(h).padStart(2,'0')}:${String(new Date().getMinutes()).padStart(2,'0')} · 高亮为当前小时`;
+}
+
+async function load() {
+  renderTimeline();
+  try {
+    const r = await fetch(`/api/godview?token=${TOKEN}`);
+    const g = await r.json();
+    const lc = g.life_core || {};
+    const life = lc.life || {};
+    $('nowPlace').textContent = life.location || '—';
+    $('nowAct').textContent = life.activity || '';
+    $('moodPill').textContent = '心情 ' + ((lc.mood && lc.mood.label) || '—');
+    $('modePill').textContent = '模式 ' + (g.memoryMode || '—');
+    $('countPill').textContent = '情景 ' + (lc.episodes ?? 0) + ' · 事实 ' + (lc.facts ?? 0) + ' · 意图 ' + (lc.intents ?? 0);
+
+    const recent = g.recent || [];
+    $('recent').innerHTML = recent.length
+      ? recent.map((x) => {
+          const g = x.gist || x.text || '';
+          const prefix = g.startsWith('（') ? '' : `<span class="emo">（${x.emo || '平静'}）</span>`;
+          return `<div class="item"><span class="ts">${fmt(x.ts)}</span>${prefix}${g}</div>`;
+        }).join('')
+      : '<div class="empty">暂无</div>';
+
+    const intents = (g.intents || []).filter((x) => x.state === 'open');
+    $('intents').innerHTML = intents.length
+      ? intents.map((x) => `<div class="item">${x.object} <span class="ts">（${x.kind}）</span></div>`).join('')
+      : '<div class="empty">暂无</div>';
+
+    const facts = g.facts || [];
+    $('facts').innerHTML = facts.length
+      ? facts.map((x) => `<div class="item"><span class="ts">${x.p}</span>${x.o}${x.disputed ? ' <span class="ts">（有争议）</span>' : ''}</div>`).join('')
+      : '<div class="empty">暂无</div>';
+
+    try {
+      const fr = await fetch(`/api/feed?token=${TOKEN}`);
+      const fd = await fr.json();
+      feedData = fd.items || [];
+      renderFeed();
+    } catch (e) {
+      $('feed').innerHTML = '<div class="empty">读取失败</div>';
+    }
+
+    $('status').textContent = `${life.location || ''} ${life.activity || ''} · 上次事件：${lc.lastEvent ? fmt(lc.lastEvent.ts) : '无'}`;
+  } catch (e) {
+    $('status').textContent = '读取失败：' + e.message;
+  }
+}
+
+async function setMode(mode) {
+  try {
+    await fetch(`/api/memory/mode?token=${TOKEN}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ memoryMode: mode }),
+    });
+    load();
+  } catch (e) { $('status').textContent = '切换失败：' + e.message; }
+}
+
+document.querySelectorAll('#feedFilter .fbtn').forEach((b) => {
+  b.addEventListener('click', () => {
+    feedFilter = b.dataset.f;
+    document.querySelectorAll('#feedFilter .fbtn').forEach((x) => x.classList.toggle('on', x === b));
+    renderFeed();
+  });
+});
+
+$('btnFull').addEventListener('click', () => setMode('full'));
+$('btnDecay').addEventListener('click', () => setMode('decay'));
+$('btnRefresh').addEventListener('click', load);
+load();
+setInterval(load, 10000);
+</script>
+</body>
+</html>

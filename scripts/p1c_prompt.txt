@@ -1,0 +1,12 @@
+用 Node.js 22 ESM 写一个事实记忆模块（facts.mjs），零第三方依赖，数据存 JSON 文件。要求：
+1. 导出：
+   - addFact({ s, p, o, prov }): 写入一条事实；prov（证据 episode id）为空时拒绝写入并返回 null
+   - mergeFacts(items): 按 (s,p,o) 去重合并，重复的只增加 hits
+   - queryFacts({ p, s, limit }): 查询
+   - ruleFacts(episodes): 用正则从 episode 文本里抽取事实，返回数组
+   - allFacts()
+2. 谓词闭集：food.eat, activity.do, plan.go, mood.state, media.like, preference.like, health.state, note
+3. 冲突处理：同一 (s,p) 出现不同 o 时，标记 disputed=true，不删除旧值
+4. 数据文件：由调用方传入 dataDir，使用 facts.json
+5. 代码带中文注释
+只输出完整代码，不要解释，不要 markdown 围栏。

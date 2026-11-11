@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "安诗鱼聊天"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "和安诗鱼聊天"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "安诗鱼"
+    }
+  ]
+}

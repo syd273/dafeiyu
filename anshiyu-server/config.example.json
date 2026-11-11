@@ -1,0 +1,16 @@
+{
+  "host": "0.0.0.0",
+  "port": 8900,
+  "token": "change-me-to-a-random-token",
+  "deepseek_key_file": "deepseek-key.txt",
+  "model": "deepseek-chat",
+  "history_limit": 10,
+  "memory_top_k": 5,
+  "chat_provider_policy": "cloud_first",
+  "local_fallback_on_cloud_fail": true,
+  "features": {
+    "room": true,
+    "stickers": true,
+    "trends": true
+  }
+}

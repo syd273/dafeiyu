@@ -1,0 +1,9 @@
+用 Node.js 22 ESM 写一个记忆检索模块（recall.mjs），零第三方依赖。要求：
+1. 导出 recallEpisodes(episodes, { query, now, weights }) 
+   - episodes: [{ id, ts, text, gist, emo, salience, strength, hits }]
+   - 返回按分数降序的 [{ ...episode, score }]，最多 6 条
+2. 评分维度（默认权重）：lex 0.42（关键词/字面匹配）、recency 0.14（时间衰减，半衰期 26 小时）、salience 0.20（显著性）、affect 0.18（情绪强度）、hits 0.06（被召回次数）
+3. 关键词匹配：中文按 2-gram 切分，去停用词，计算 query 与 text/gist 的重合度
+4. 时间衰减用 exp(-Δt/半衰期)，输出分数保留 3 位小数
+5. 代码带中文注释
+只输出完整代码，不要解释，不要 markdown 代码围栏。

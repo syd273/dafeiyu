@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>记忆星图 · 安诗鱼</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌌</text></svg>">
+<link rel="stylesheet" href="./style.css">
+<script type="importmap">
+{ "imports": { "three": "./lib/three.module.min.js" } }
+</script>
+</head>
+<body>
+<canvas id="scene"></canvas>
+
+<div id="vignette"></div>
+
+<!-- 时间轴开关 -->
+<button id="tlBtn" style="position:fixed;right:20px;bottom:70px;z-index:18;padding:8px 14px;border-radius:999px;
+  background:rgba(20,26,46,.85);color:#cfe0ff;border:1px solid rgba(120,150,220,.4);
+  font:12px 'Microsoft YaHei';cursor:pointer;backdrop-filter:blur(6px)">🕐 时间轴</button>
+
+<!-- 她的 24 小时时间轴（默认隐藏） -->
+<div id="tlPanel" style="display:none;position:fixed;right:20px;top:150px;width:360px;z-index:18;
+  background:rgba(8,10,20,.9);border:1px solid rgba(120,150,220,.3);border-radius:14px;padding:14px 16px;
+  color:#dfe6ff;font:12px/1.7 'Microsoft YaHei';backdrop-filter:blur(10px)">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <span style="color:#9fc1ff;letter-spacing:2px">她的 24 小时</span>
+    <span id="tl-close" style="cursor:pointer;color:#6f7fae">✕</span>
+  </div>
+  <div id="tl-now" style="color:#8fa2d8;font-size:11.5px;margin-bottom:8px"></div>
+  <div id="tl-bar" style="position:relative;height:26px;border-radius:8px;overflow:hidden;background:#111525"></div>
+  <div id="tl-ticks" style="position:relative;height:16px;color:#5f6c96;font-size:10px;margin-top:2px"></div>
+  <div id="tl-legend" style="margin-top:8px;font-size:11.5px;color:#a9b6dd;display:flex;flex-direction:column;gap:3px"></div>
+</div>
+
+
+<!-- 她的生活 -->
+<div id="life" style="position:fixed;left:24px;bottom:96px;width:300px;z-index:17;
+  background:rgba(8,10,20,.72);border:1px solid rgba(120,150,220,.25);border-radius:14px;
+  padding:14px 16px;color:#dfe6ff;font:12.5px/1.7 'Microsoft YaHei',sans-serif;backdrop-filter:blur(8px)">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+    <span style="color:#9fc1ff;font-size:12px;letter-spacing:2px">安诗鱼 · 此刻</span>
+    <span id="life-close" style="cursor:pointer;color:#6f7fae;font-size:11px;padding:0 2px">收起 ‹</span>
+  </div>
+  <div id="life-status" style="color:#e8eeff">加载中…</div>
+  <div id="life-clock" style="color:#6f7fae;font-size:11.5px;margin-top:4px"></div>
+  <div style="color:#8fa2d8;font-size:11.5px;margin:12px 0 4px;letter-spacing:1px">她的说说</div>
+  <div id="life-feed" style="color:#c7d2f2;font-size:12px"></div>
+</div>
+
+
+
+
+
+<!-- 控制台展开按钮 -->
+<button id="panelToggle" style="display:none;position:fixed;right:34px;top:34px;z-index:17;padding:8px 14px;border-radius:999px;
+  background:rgba(20,26,46,.85);color:#cfe0ff;border:1px solid rgba(120,150,220,.4);
+  font:12px 'Microsoft YaHei';cursor:pointer;backdrop-filter:blur(6px)">控制台 ‹</button>
+
+<!-- 查找记忆（收起态） -->
+<button id="memSearchToggle" style="display:none;position:fixed;left:50%;transform:translateX(-50%);top:10px;z-index:18;
+  padding:6px 14px;border-radius:999px;background:rgba(20,26,46,.85);color:#cfe0ff;
+  border:1px solid rgba(120,150,220,.4);font:12px 'Microsoft YaHei';cursor:pointer;backdrop-filter:blur(6px)">🔍 查找记忆</button>
+
+<!-- 记忆搜索 -->
+<div id="memSearch" style="position:fixed;left:50%;transform:translateX(-50%);top:10px;z-index:18;width:340px;
+  background:rgba(8,10,20,.88);border:1px solid rgba(120,150,220,.3);border-radius:12px;
+  padding:8px 10px;backdrop-filter:blur(8px)">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <span style="color:#9fc1ff;font-size:12px;letter-spacing:1px">🔍 查找记忆</span>
+    <span id="memSearchClose" style="cursor:pointer;color:#6f7fae;font-size:11px;padding:0 2px">收起 ×</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+    <input id="memSearchInput" placeholder="输入关键词，如：阿东" style="flex:1;background:transparent;border:0;outline:0;
+      color:#dfe6ff;font:12px 'Microsoft YaHei'">
+  </div>
+  <div id="memSearchList" style="max-height:120px;overflow:auto;margin-top:4px"></div>
+</div>
+
+<!-- 侧栏展开按钮 -->
+<button id="lifeToggle" style="display:none;position:fixed;left:24px;bottom:96px;z-index:17;padding:8px 14px;border-radius:999px;
+  background:rgba(20,26,46,.85);color:#cfe0ff;border:1px solid rgba(120,150,220,.4);
+  font:12px 'Microsoft YaHei';cursor:pointer;backdrop-filter:blur(6px)">她的此刻 ›</button>
+
+<!-- 加载屏 -->
+<div id="loading">
+  <div class="l-ring"></div>
+  <p>正在点亮 <b id="loading-count">…</b> 颗恒星</p>
+</div>
+
+<!-- 标题 -->
+<header id="title" class="ui">
+  <h1>记 忆 星 图</h1>
+  <p>安诗鱼的记忆宇宙 · 每一颗星都是她记住的一件事</p>
+</header>
+
+<!-- 控制面板 -->
+<aside id="panel" class="ui">
+  <div class="p-title" style="display:flex;justify-content:space-between;align-items:center">
+    <span>控制台 <span>CONTROL</span></span>
+    <span id="panel-close" style="cursor:pointer;color:#6f7fae;font-size:11px;letter-spacing:0">收起 ›</span>
+  </div>
+  <label class="ck"><input type="checkbox" id="chkSpin" checked><i></i>银河自转</label>
+  <label class="ck"><input type="checkbox" id="chkCruise" checked><i></i>自动巡航</label>
+  <div class="row"><span>辉光</span><input type="range" id="rngBloom" min="0" max="2" step="0.05" value="0.95"></div>
+  <div class="row"><span>时流</span><input type="range" id="rngTime" min="0" max="5" step="0.1" value="1"></div>
+  <div class="row"><span>星光</span><input type="range" id="rngStar" min="0.3" max="1.8" step="0.05" value="1"></div>
+  <div class="row"><span>星云</span><input type="range" id="rngNebula" min="0" max="2.5" step="0.05" value="1"></div>
+  <div class="row"><span>星点</span><input type="range" id="rngSize" min="0.5" max="2" step="0.05" value="1"></div>
+  <div class="row"><span>转速</span><input type="range" id="rngSpin" min="0" max="3" step="0.1" value="1"></div>
+  <div class="stats"><span id="fps">— FPS</span><span id="starCount">…</span></div>
+  <button id="resetLook">重置外观</button>
+</aside>
+
+<!-- 标注层 -->
+<div id="labels"></div>
+
+<!-- 底部提示 -->
+<footer id="hints" class="ui">
+  <span>拖动 <em>旋转</em></span><span>滚轮 <em>缩放</em></span><span>右键 <em>平移</em></span>
+  <span class="sep"></span>
+  <span><kbd>空格</kbd> 时流</span><span><kbd>R</kbd> 巡航</span><span><kbd>H</kbd> 影院模式</span>
+</footer>
+
+<!-- 记忆详情面板 -->
+<div id="memp" style="display:none;position:fixed;right:22px;top:110px;width:340px;max-height:60vh;overflow:auto;z-index:20;
+  background:rgba(8,10,20,.92);border:1px solid rgba(120,150,220,.35);border-radius:14px;padding:16px;
+  color:#dfe6ff;font:13px/1.7 'Microsoft YaHei',sans-serif;backdrop-filter:blur(10px);box-shadow:0 8px 30px rgba(0,0,0,.6)">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <span style="color:#9fc1ff;font-size:12px;letter-spacing:1px">记忆详情</span>
+    <span id="memp-close" style="cursor:pointer;color:#9db4ef;font-size:18px;line-height:1;padding:0 4px">×</span>
+  </div>
+  <div id="memp-meta" style="color:#8fa2d8;font-size:12px;margin-bottom:10px"></div>
+  <div id="memp-text" style="white-space:pre-wrap;background:rgba(20,26,48,.7);border-radius:10px;padding:12px"></div>
+  <div style="color:#5f6c96;font-size:11px;margin-top:10px">这是安诗鱼所记住的事情 · 点击空白处关闭</div>
+</div>
+<div id="nogl" hidden><h2>⚠ 未检测到 WebGL</h2><p>当前浏览器不支持 WebGL，无法渲染三维星系。</p></div>
+
+<pre id="errlog" style="display:none;position:fixed;left:0;bottom:0;z-index:99;max-width:100%;padding:6px 10px;color:#ff8899;background:rgba(0,0,0,.85);font:11px/1.5 monospace;white-space:pre-wrap"></pre>
+<script>
+(function(){
+  var d = document.getElementById('errlog');
+  function log(msg){ d.style.display = 'block'; d.textContent += msg + "\n"; }
+  window.addEventListener('error', function(e){
+    var stack = e.error && e.error.stack ? String(e.error.stack).split('\n').slice(0, 3).join('  //  ') : '(no stack)';
+    log((e.message || 'error') + '\n    ' + stack);
+  });
+  document.addEventListener('error', function(e){ var t = e.target; if (t && t.tagName) log('EVENT on <' + t.tagName + '> ' + (e.message || '') + ' ' + (e.error && e.error.message || '')); }, true);
+  window.addEventListener('unhandledrejection', function(e){ log('PROMISE: ' + String(e.reason && e.reason.message || e.reason)); });
+})();
+</script>
+
+<script type="module" src="./main.js"></script>
+</body>
+</html>

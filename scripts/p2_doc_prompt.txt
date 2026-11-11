@@ -1,0 +1,18 @@
+为 Life Core 服务（http://127.0.0.1:8910）写一份中文 API 文档（Markdown）。已知接口：
+GET  /health          -> {ok, service, ts}
+GET  /state           -> {ok, service, version, mood:{valence,arousal,tension,label}, life:{location,activity,silent}, episodes, facts, intents, lastEvent}
+GET  /memories?limit= -> {ok, items:[{id,ts,gist,text,emo}]}
+GET  /recall?q=       -> {ok, items:[{...episode,score}], context}
+GET  /diary           -> {ok, source: llm|template, text, count}
+GET  /facts?p=&s=&limit= -> {ok, items:[{id,s,p,o,prov,ts,hits,disputed}]}
+GET  /intents         -> {ok, items:[{id,kind,object,prov,state,dueAt,createdAt,doneAt}]}
+POST /chat  {text}    -> {ok, reply, memories, ts}
+POST /event {kind,text,emo} -> {ok, episode, intent, mood}
+POST /intent/done {id} -> {ok, intent}
+POST /consolidate {}  -> {ok, processed, factsAdded, intentsAdded, facts}
+要求：
+1. 每个接口：路径、方法、参数、请求示例、响应示例
+2. 顶部写服务说明：只监听 127.0.0.1:8910，数据只写 D:\大肥鱼\life-core\data
+3. 写清错误约定：{ok:false, error}
+4. 中文，简洁
+只输出 Markdown 文档，不要解释，不要代码围栏包裹整篇。
