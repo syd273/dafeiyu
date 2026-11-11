@@ -25,7 +25,7 @@
 
 > **怎么找到本项目**：GitHub 上"大肥鱼"重名仓库很多，直接搜名字容易翻不到。可靠的方式是搜
 > `syd273/dafeiyu`、`user:syd273`，或按标签 `topic:ai-companion topic:harmonyos`。
-> 国内访问 GitHub 受限时，可用镜像：<http://121.196.175.68/repo/>
+> 介绍页：<https://syd273.github.io/dafeiyu/> ｜ 国内镜像：<http://121.196.175.68/repo/>
 
 ## 名字说明
 
