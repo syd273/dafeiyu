@@ -2,6 +2,19 @@
   "app": {
     "signingConfigs": [
       {
+        "name": "release",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "D:\\大肥鱼\\signing\\anshiyu.cer",
+          "keyAlias": "anshiyu",
+          "keyPassword": "Anshiyu2026!",
+          "profile": "D:\\大肥鱼\\signing\\anshiyu.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "D:\\大肥鱼\\signing\\anshiyu.p12",
+          "storePassword": "Anshiyu2026!"
+        }
+      },
+      {
         "name": "default",
         "type": "HarmonyOS",
         "material": {

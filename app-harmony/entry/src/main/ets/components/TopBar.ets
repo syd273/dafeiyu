@@ -8,6 +8,8 @@ export struct TopBar {
   onBack: () => void = () => { };
   onSettings: () => void = () => { };
   onStar: () => void = () => { };
+  onSays: () => void = () => { };
+  onRefresh: () => void = () => { };
 
   build() {
     Row() {
@@ -31,6 +33,14 @@ export struct TopBar {
       }
       .alignItems(HorizontalAlign.Start)
       .layoutWeight(1)
+      Text(this.online ? '' : '重连')
+        .fontSize(12).fontColor('#ffd48a')
+        .padding({ left: 8, right: 8 })
+        .onClick(() => { this.onRefresh(); })
+      Text('💬')
+        .fontSize(15)
+        .padding({ left: 8, right: 8 })
+        .onClick(() => { this.onSays(); })
       Text('⭐')
         .fontSize(16).fontColor('#bcd0ff')
         .width(36).height(36).textAlign(TextAlign.Center)

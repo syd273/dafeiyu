@@ -15,6 +15,7 @@ const KEY_EMOJIS = 'custom_emojis';
 const KEY_THEME = 'theme_color';
 const KEY_BG = 'chat_bg';
 const KEY_BG_IMAGE = 'chat_bg_image';
+const KEY_TOKEN = 'api_token';
 
 export interface EmojiItem {
   name: string;
@@ -88,6 +89,22 @@ export class AppConfig {
   static async setCloud(ctx: Context, url: string): Promise<void> {
     const p = await AppConfig._pref(ctx);
     await p.put(KEY_CLOUD, url.trim());
+    await p.flush();
+  }
+
+  // ===== 连接令牌 =====
+  static async getToken(ctx: Context): Promise<string> {
+    try {
+      const p = await AppConfig._pref(ctx);
+      return (await p.get(KEY_TOKEN, '')) as string;
+    } catch (e) {
+      return '';
+    }
+  }
+
+  static async setToken(ctx: Context, token: string): Promise<void> {
+    const p = await AppConfig._pref(ctx);
+    await p.put(KEY_TOKEN, token.trim());
     await p.flush();
   }
 

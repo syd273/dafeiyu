@@ -27,6 +27,7 @@ export struct MessageList {
   @Prop herAvatar: string = '';
   @Prop theme: string = '#3b6ef5';
   @Prop herName: string = '安诗鱼';
+  @Prop baseUrl: string = '';
   onQuick: (t: string) => void = () => { };
   onResend: (t: string) => void = () => { };
   onDelete: (i: number) => void = () => { };
@@ -89,6 +90,15 @@ export struct MessageList {
     const d = new Date(ts);
     const p = (n: number): string => n < 10 ? '0' + n : '' + n;
     return `${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+
+  memeId(text: string): string {
+    const m = text.match(/\[meme:\s*([a-z0-9-]+)\s*\]/i);
+    return m ? m[1] : '';
+  }
+
+  cleanText(text: string): string {
+    return text.replace(/\[meme:\s*[a-z0-9-]+\s*\]/gi, '').trim();
   }
 
   segments(text: string): string[] {
@@ -200,28 +210,40 @@ export struct MessageList {
         .margin({ left: 8, top: 2 })
       } else {
         this.avatarView(this.herAvatar, 32, 'her')
-        Flex({ wrap: FlexWrap.Wrap }) {
-          ForEach(this.segments(m.text), (seg: string) => {
-            if (seg.startsWith('http')) {
-              Text(seg)
-                .fontSize(15).lineHeight(23).fontColor('#8fb8ff')
-                .decoration({ type: TextDecorationType.Underline, color: '#8fb8ff' })
-                .constraintSize({ maxWidth: '100%' })
-                .onClick(() => { this.onOpenLink(seg); })
-            } else {
-              Text(seg)
-                .fontSize(16).lineHeight(23).fontColor('#e8eeff')
-                .constraintSize({ maxWidth: '100%' })
+        Column() {
+          Flex({ wrap: FlexWrap.Wrap }) {
+            ForEach(this.segments(this.cleanText(m.text)), (seg: string) => {
+              if (seg.startsWith('http')) {
+                Text(seg)
+                  .fontSize(15).lineHeight(23).fontColor('#8fb8ff')
+                  .decoration({ type: TextDecorationType.Underline, color: '#8fb8ff' })
+                  .constraintSize({ maxWidth: '100%' })
+                  .onClick(() => { this.onOpenLink(seg); })
+              } else {
+                Text(seg)
+                  .fontSize(16).lineHeight(23).fontColor('#e8eeff')
+                  .constraintSize({ maxWidth: '100%' })
+              }
+            }, (seg: string) => seg.slice(0, 10) + seg.length)
+            if (this.memeId(m.text)) {
+              Image(`${this.baseUrl}/api/sticker/${this.memeId(m.text)}`)
+                .width(110).height(110)
+                .objectFit(ImageFit.Contain)
+                .borderRadius(8)
+                .margin({ top: 6 })
+                .onClick(() => { })
             }
-          }, (seg: string) => seg.slice(0, 10) + seg.length)
+          }
+          .padding({ left: 14, right: 14, top: 9, bottom: 9 })
+          .backgroundColor('#1e2434')
+          .border({ width: 0.5, color: '#2a3350' })
+          .borderRadius({ topLeft: 6, topRight: 18, bottomLeft: 18, bottomRight: 18 })
+          .constraintSize({ maxWidth: '72%' })
+          .margin({ left: 8 })
+          .bindContextMenu(this.msgMenu(m, idx), ResponseType.LongPress)
+          Text('AI 生成').fontSize(9).fontColor('#4a567c').margin({ left: 10, top: 2 })
         }
-        .padding({ left: 14, right: 14, top: 9, bottom: 9 })
-        .backgroundColor('#1e2434')
-        .border({ width: 0.5, color: '#2a3350' })
-        .borderRadius({ topLeft: 6, topRight: 18, bottomLeft: 18, bottomRight: 18 })
-        .constraintSize({ maxWidth: '72%' })
-        .margin({ left: 8 })
-        .bindContextMenu(this.msgMenu(m, idx), ResponseType.LongPress)
+        .alignItems(HorizontalAlign.Start)
         Blank()
       }
     }
@@ -302,7 +324,7 @@ export struct MessageList {
       .width('100%').height('100%')
       .padding({ left: 12, right: 12, top: 4, bottom: 10 })
       .scrollBar(BarState.Off)
-      .edgeEffect(EdgeEffect.None)
+      .edgeEffect(EdgeEffect.Spring)
       .sticky(StickyStyle.Header)
 
       if (this.messages.length === 0) {

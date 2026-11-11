@@ -11,9 +11,11 @@ import { ChatStore, StoredMsg, SyncState } from '../common/ChatStore';
 import { photoAccessHelper } from '@kit.MediaLibraryKit';
 import fs from '@ohos.file.fs';
 import { Notifier } from '../common/Notifier';
+import { PushHelper } from '../common/PushHelper';
 import { common } from '@kit.AbilityKit';
+import { window } from '@kit.ArkUI';
 
-const TOKEN = 'anshiyu-app-2026';
+let TOKEN = 'anshiyu-app-2026';
 const DEFAULT_BASE = 'http://192.168.43.5:8900';
 
 @Entry
@@ -22,6 +24,9 @@ struct Index {
   @State messages: ChatMsg[] = [];
   @State sending: boolean = false;
   @State online: boolean = false;
+  @State demoMode: boolean = false;
+  @State statusBarHeight: number = 38;
+  @State windowWidth: number = 0;
   @State mood: string = '平静';
   @State life: string = '';
   @State showEmoji: boolean = false;
@@ -49,20 +54,42 @@ struct Index {
   aboutToAppear() {
     this.splashStart = Date.now();
     this.startSplash();
+    // 状态栏安全区 + 窗口宽度（折叠屏适配），取不到时用兜底值
+    try {
+      window.getLastWindow(getContext(this)).then((win) => {
+        try {
+          const avoid = win.getWindowAvoidArea(window.AvoidAreaType.TYPE_SYSTEM);
+          const h = px2vp(avoid.topRect.height);
+          if (h > 0) {
+            this.statusBarHeight = h;
+          }
+        } catch (e) { }
+      }).catch(() => { });
+    } catch (e) { }
     Notifier.ensure(getContext(this) as common.UIAbilityContext);
-    this.loadHistory();
-    this.syncRecent();
-    this.loadConfig().then(() => {
-      this.loadStatus();
-      this.connectWs();
-      this.finishSplash();
-    }).catch(() => { this.finishSplash(); });
-    setTimeout(() => { this.finishSplash(); }, 1200);
+    // 首帧优先：先渲染界面，所有网络请求延迟，避免冷启动被网络拖慢
+    setTimeout(() => {
+      this.loadHistory();
+    }, 120);
+    setTimeout(() => {
+      this.loadConfig().then(() => {
+        this.loadStatus();
+        this.connectWs();
+        this.finishSplash();
+        setTimeout(() => { this.syncRecent(); }, 400);
+        setTimeout(() => { PushHelper.register(this.baseUrl); }, 3000);
+      }).catch(() => { this.finishSplash(); });
+    }, 700);
+    setTimeout(() => { this.finishSplash(); }, 450);
   }
 
   onPageShow() {
     this.pageVisible = true;
-    this.loadConfig().then(() => { this.loadStatus(); });
+    this.loadConfig().then(() => {
+      this.loadStatus();
+      // 从设置页返回时重新加载聊天记录（支持清空）
+      this.loadHistory();
+    });
   }
 
   onPageHide() {
@@ -89,7 +116,8 @@ struct Index {
         for (const it of items) {
           const text = (it.text ?? '') as string;
           if (!text) continue;
-          this.addMsg('assistant', text);
+          const its = ((it.ts ?? 0) as number) * 1000;
+          this.addMsg('assistant', text, 'ok', its);
         }
         await SyncState.set(ctx, Math.floor(Date.now() / 1000));
       }
@@ -100,9 +128,7 @@ struct Index {
     try {
       const ctx = getContext(this) as Context;
       const list = await ChatStore.load(ctx);
-      if (list && list.length > 0) {
-        this.messages = list;
-      }
+      this.messages = list && list.length > 0 ? list : [];
     } catch (e) { }
   }
 
@@ -130,6 +156,10 @@ struct Index {
 
   async loadConfig() {
     const ctx = getContext(this) as Context;
+    try {
+      const custom = await AppConfig.getToken(ctx);
+      if (custom) TOKEN = custom;
+    } catch (e) { }
     this.baseUrl = await AppConfig.getBase(ctx);
     this.myAvatar = await AppConfig.getAvatar(ctx, 'me');
     this.herAvatar = await AppConfig.getAvatar(ctx, 'her');
@@ -158,6 +188,52 @@ struct Index {
     return this.baseUrl.replace('http://', 'ws://').replace('https://', 'wss://');
   }
 
+  enterDemo() {
+    if (this.demoMode) return;
+    this.demoMode = true;
+    this.messages = [
+      { role: 'assistant', text: '（演示模式）嗨，我是安诗鱼。这是给你看的示例：她会记住你说过的话，会自己生活、发说说，也能陪你看记忆星图。', ts: Date.now() - 120000, status: 'ok' },
+      { role: 'assistant', text: '真正的她跑在你自己的电脑上。打开设置 → 配置教程，按步骤连上服务器就能见到她啦。', ts: Date.now() - 60000, status: 'ok' },
+    ];
+  }
+
+  /** 当前地址连不上时，扫描热点常见 IP 找服务器 */
+  async detectServer(): Promise<boolean> {
+    try {
+      const m = this.baseUrl.match(/^(https?:\/\/)(\d+\.\d+\.\d+)\./);
+      if (!m) return false;
+      const prefix = `${m[1]}${m[2]}.`;
+      const candidates = [5, 2, 6, 10, 20, 3, 4, 7, 8, 9, 11, 12, 15, 30, 50];
+      const tasks: Promise<string>[] = [];
+      for (const n of candidates) {
+        tasks.push(this.probe(`${prefix}${n}:8900`));
+      }
+      const results = await Promise.all(tasks);
+      const found = results.find((r: string) => r !== '');
+      if (found) {
+        this.baseUrl = found;
+        const ctx = getContext(this) as Context;
+        await AppConfig.setLocal(ctx, found);
+        return true;
+      }
+    } catch (e) { }
+    return false;
+  }
+
+  async probe(base: string): Promise<string> {
+    try {
+      const req = http.createHttp();
+      const res = await req.request(`${base}/api/status?token=${TOKEN}`, {
+        method: http.RequestMethod.GET,
+        connectTimeout: 1500,
+        readTimeout: 1500,
+      });
+      req.destroy();
+      if (res.responseCode === 200) return base;
+    } catch (e) { }
+    return '';
+  }
+
   async loadStatus() {
     try {
       const req = http.createHttp();
@@ -176,6 +252,15 @@ struct Index {
       }
     } catch (e) {
       this.online = false;
+      // 地址可能变了（热点重新分配 IP），自动找一下服务器
+      this.detectServer().then((ok: boolean) => {
+        if (ok) {
+          this.loadStatus();
+          this.connectWs();
+        } else {
+          this.enterDemo();
+        }
+      });
     }
   }
 
@@ -185,11 +270,20 @@ struct Index {
       this.ws = webSocket.createWebSocket();
       this.ws.on('open', () => { this.online = true; });
       this.ws.on('message', (err: Error, data: string | ArrayBuffer) => {
+      try {
+        const raw = typeof data === 'string' ? data : '';
+        const msg = raw ? JSON.parse(raw) as Record<string, Object> : null;
+        if (msg && msg.type === 'say' && msg.text) {
+          Notifier.notify('安诗鱼 · 说说', msg.text as string);
+          return;
+        }
+      } catch (e) { }
         if (err) return;
         try {
           const m = JSON.parse(data as string) as Record<string, string>;
           if (m.type === 'message' && m.role === 'assistant' && m.text) {
-            this.addMsg('assistant', m.text);
+            const wts = m.ts ? Number(m.ts) * 1000 : 0;
+            this.addMsg('assistant', m.text, 'ok', wts);
             if (!this.pageVisible) {
               Notifier.notify('安诗鱼', m.text);
             }
@@ -201,17 +295,33 @@ struct Index {
       this.ws.connect(`${this.wsUrl()}/ws?token=${TOKEN}`);
     } catch (e) {
       this.online = false;
+      // 地址可能变了（热点重新分配 IP），自动找一下服务器
+      this.detectServer().then((ok: boolean) => {
+        if (ok) {
+          this.loadStatus();
+          this.connectWs();
+        } else {
+          this.enterDemo();
+        }
+      });
     }
   }
 
-  addMsg(role: string, text: string, status: string = 'ok') {
-    if (role === 'assistant') {
-      const now = Date.now();
-      if (text === this.lastAssistant && now - this.lastAssistantTs < 3000) return;
-      this.lastAssistant = text;
-      this.lastAssistantTs = now;
+  addMsg(role: string, text: string, status: string = 'ok', ts: number = 0) {
+    const msgTs = ts > 0 ? ts : Date.now();
+    // 去重：同一条消息（补收 + 实时广播）只保留一条
+    const recent = this.messages.slice(-30);
+    for (const m of recent) {
+      if (m.role === role && m.text === text && Math.abs(m.ts - msgTs) < 120000) {
+        return;
+      }
     }
-    this.messages = this.messages.concat([{ role: role, text: text, ts: Date.now(), status: status }]);
+    if (role === 'assistant') {
+      if (text === this.lastAssistant && msgTs - this.lastAssistantTs < 3000) return;
+      this.lastAssistant = text;
+      this.lastAssistantTs = msgTs;
+    }
+    this.messages = this.messages.concat([{ role: role, text: text, ts: msgTs, status: status }]);
     this.saveHistory();
   }
 
@@ -365,6 +475,17 @@ struct Index {
           onBack: () => { router.back(); },
           onSettings: () => { router.pushUrl({ url: 'pages/Settings' }); },
           onStar: () => { router.pushUrl({ url: 'pages/StarMap' }); },
+          onSays: () => { router.pushUrl({ url: 'pages/Says' }); },
+          onRefresh: () => {
+            this.detectServer().then((ok: boolean) => {
+              if (!ok) {
+                this.loadConfig().then(() => { this.loadStatus(); this.connectWs(); });
+              } else {
+                this.loadStatus();
+                this.connectWs();
+              }
+            });
+          },
         })
 
         Divider().color('#1a2136').strokeWidth(0.5)
@@ -380,6 +501,7 @@ struct Index {
           herAvatar: this.herAvatar,
           theme: this.theme,
           herName: this.herName,
+          baseUrl: this.baseUrl,
           onQuick: (t: string) => { this.sendText(t); },
           onResend: (t: string) => { this.draft = t; },
           onDelete: (i: number) => { this.removeAt(i); },
@@ -405,6 +527,7 @@ struct Index {
           onFocusInput: () => { this.showEmoji = false; },
         })
       }
+      .padding({ top: this.statusBarHeight })
       .width('100%')
       .height('100%')
       .backgroundColor('#0d1017')

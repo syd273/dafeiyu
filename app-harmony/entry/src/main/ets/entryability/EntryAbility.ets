@@ -40,6 +40,21 @@ export default class EntryAbility extends UIAbility {
         try {
           mainWindow.setWindowBackgroundColor('#0d1017');
         } catch (e) { }
+        // 状态栏：沉浸式 + 深色背景浅色图标；读取安全区高度给页面留白
+        try {
+          mainWindow.setWindowLayoutFullScreen(true);
+          mainWindow.setWindowSystemBarProperties({
+            statusBarColor: '#0d1017',
+            statusBarContentColor: '#ffffff',
+            navigationBarColor: '#0d1017',
+            navigationBarContentColor: '#ffffff',
+          });
+        } catch (e) { }
+        try {
+          const avoid = mainWindow.getWindowAvoidArea(window.AvoidAreaType.TYPE_SYSTEM);
+          const top = px2vp(avoid.topRect.height);
+          AppStorage.setOrCreate('statusBarHeight', top);
+        } catch (e) { }
         mainWindow.getUIContext().setKeyboardAvoidMode(KeyboardAvoidMode.RESIZE);
       });
     } catch (err) {

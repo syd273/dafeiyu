@@ -1,0 +1,69 @@
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "release",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "D:\\大肥鱼\\signing\\anshiyu.cer",
+          "keyAlias": "anshiyu",
+          "keyPassword": "Anshiyu2026!",
+          "profile": "D:\\大肥鱼\\signing\\anshiyu.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "D:\\大肥鱼\\signing\\anshiyu.p12",
+          "storePassword": "Anshiyu2026!"
+        }
+      },
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "C:\\Users\\SYD\\.ohos\\config\\default_anshiyu_app_Cp4_uKVRSfmkFh70AbGokFs8qcUA7YgRE88_HSVLbsU=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001BEFA2AD79B1C14645F1C73E2EDF7AA029FC26F688E0F0DDFE0BEB0D5C49B46E5672B3AB2C1AF4D1",
+          "profile": "C:\\Users\\SYD\\.ohos\\config\\default_anshiyu_app_Cp4_uKVRSfmkFh70AbGokFs8qcUA7YgRE88_HSVLbsU=.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "C:\\Users\\SYD\\.ohos\\config\\default_anshiyu_app_Cp4_uKVRSfmkFh70AbGokFs8qcUA7YgRE88_HSVLbsU=.p12",
+          "storePassword": "0000001B8FFFE5EA9BA6A467436E58236FE7715C031AB1962FAF8DE1AD1A58130E82E3A6985F4DD13A92EA"
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        "targetSdkVersion": "26.0.0",
+        "compatibleSdkVersion": "6.1.1(24)",
+        "runtimeOS": "HarmonyOS",
+        "buildOption": {
+          "strictMode": {
+            "caseSensitiveCheck": true,
+            "useNormalizedOHMUrl": true
+          }
+        }
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug",
+      },
+      {
+        "name": "release"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}

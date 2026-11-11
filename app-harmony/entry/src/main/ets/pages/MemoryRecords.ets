@@ -26,6 +26,7 @@ struct MemoryRecords {
   @State total: number = 0;
   @State tip: string = '';
   @State fromCache: boolean = false;
+  @State pendingDelete: number = -1;
   private baseUrl: string = '';
 
   aboutToAppear() {
@@ -187,10 +188,19 @@ struct MemoryRecords {
                   Text(`${it.emo} · ${this.fmt(it.ts)}`)
                     .fontSize(10).fontColor('#5d6a92').margin({ left: 8 })
                   Blank()
-                  Text('删除')
-                    .fontSize(11).fontColor('#ff6b6b')
+                  Text(this.pendingDelete === it.id ? '确认删除？' : '删除')
+                    .fontSize(11)
+                    .fontColor(this.pendingDelete === it.id ? '#ff3b3b' : '#ff6b6b')
                     .padding({ left: 8, right: 4, top: 2, bottom: 2 })
-                    .onClick(() => { this.remove(it); })
+                    .onClick(() => {
+                      if (this.pendingDelete === it.id) {
+                        this.pendingDelete = -1;
+                        this.remove(it);
+                      } else {
+                        this.pendingDelete = it.id;
+                        this.tip = '再点一次「确认删除」才会删除';
+                      }
+                    })
                 }
                 .width('100%')
                 Text(it.text)

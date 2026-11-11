@@ -4,6 +4,13 @@
     "pages/Settings",
     "pages/StarMap",
     "pages/LifeLog",
-    "pages/MemoryRecords"
+    "pages/MemoryRecords",
+    "pages/Music",
+    "pages/Legacy",
+    "pages/GodView",
+    "pages/Says",
+    "pages/Guide",
+    "pages/Privacy",
+    "pages/Agreement"
   ]
 }
